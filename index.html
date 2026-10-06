@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lenox Search Sandbox — Build It Yourself</title>
+<style>
+:root{--ink:#21162a;--purple:#573474;--deep:#351c4b;--bg:#f7f3f9;--paper:#fff;--line:#ddd3e4;--muted:#6b6071;--focus:#1267c4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+header{height:58px;background:var(--deep);color:#fff;display:flex;align-items:center;padding:0 24px;font-weight:900}
+main{width:min(1200px,96vw);margin:22px auto;display:grid;grid-template-columns:.9fr 1.1fr;gap:18px;min-height:calc(100vh - 102px)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:25px;box-shadow:0 10px 28px rgba(53,28,75,.06)}
+.eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.1em;font-weight:900;color:var(--purple);margin:0 0 7px}
+h1{font-size:1.85rem;color:var(--deep);margin:0 0 9px}.help{color:var(--muted);line-height:1.45;margin:0 0 20px}
+.workspace{border:2px dashed #c9bad2;border-radius:17px;padding:16px;min-height:108px;background:#fbf9fc;margin-bottom:18px}
+.label{font-size:.78rem;font-weight:900;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.query{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-height:45px}
+.qchip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:2px solid #bfaaca;border-radius:12px;padding:9px 11px;font-weight:900}
+.qchip button{border:0;background:#eee6f3;color:var(--deep);border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:900}
+.op{font-weight:900;color:var(--purple)}
+.bank{margin-top:14px}.bank h2{font-size:1rem;margin:18px 0 8px;color:var(--deep)}
+.row{display:flex;flex-wrap:wrap;gap:8px}.add{border:2px solid #c7b6d2;background:#fff;color:var(--ink);border-radius:999px;padding:9px 12px;font-weight:800;cursor:pointer}
+.add:hover{background:#f4eef7}.add.active{background:var(--purple);color:#fff;border-color:var(--purple)}.add:disabled{opacity:.35;cursor:default}.add:focus-visible,.qchip button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.quoteToggle{width:100%;margin-top:17px;border:2px solid var(--purple);background:#fff;color:var(--purple);border-radius:13px;padding:12px;font-weight:900;cursor:pointer}.quoteToggle.on{background:var(--purple);color:#fff}
+.reset{border:0;background:transparent;color:var(--purple);font-weight:900;text-decoration:underline;cursor:pointer;margin-top:15px}
+.results{min-height:420px;background:#faf7fc;border-radius:18px;padding:21px;display:flex;flex-wrap:wrap;align-content:flex-start;justify-content:center;gap:8px}
+.item{width:55px;height:55px;border:2px solid #c4b1cf;border-radius:13px;background:#efe6f4;display:flex;align-items:center;justify-content:center;font-size:1.5rem;animation:pop .18s ease;position:relative}
+.metaBadge{position:absolute;font-size:.57rem;font-weight:900;line-height:1;background:#fff;border:1px solid #bfaaca;border-radius:999px;padding:3px 4px;color:var(--deep)}
+.peerBadge{top:-5px;right:-5px}
+.dateBadge{bottom:-5px;left:50%;transform:translateX(-50%);white-space:nowrap}
+.legend{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:10px 0 2px;font-size:.78rem;color:var(--muted);font-weight:800}
+.legend span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 8px}
+@keyframes pop{from{opacity:.1;transform:scale(.65)}to{opacity:1;transform:scale(1)}}.count{text-align:center;font-weight:900;color:var(--purple);margin:11px 0}.note{margin-top:13px;padding:12px 14px;background:#f2edf6;border-radius:12px;line-height:1.4;font-weight:700}.caption{text-align:center;color:var(--muted);font-size:.84rem}
+@media(max-width:780px){main{grid-template-columns:1fr}.panel{padding:19px}.results{min-height:300px}}
+@media(prefers-reduced-motion:reduce){.item{animation:none}}
+.orientationCue{font-size:.76rem;font-weight:900;letter-spacing:.04em;color:var(--muted);margin:0 0 10px}
+.stageNav{display:flex;gap:8px;align-items:center;margin:0 0 18px}
+.stagePill{border:2px solid #c7b6d2;background:#fff;color:var(--deep);border-radius:999px;padding:8px 12px;font-weight:900}
+.stagePill.current{background:var(--purple);color:#fff;border-color:var(--purple)}
+.continueBtn{width:100%;margin-top:18px;border:2px solid var(--purple);background:var(--purple);color:#fff;border-radius:13px;padding:13px;font-weight:900;cursor:pointer}
+.transferPanel{max-width:760px;margin:0 auto;text-align:left}.transferPanel h1{margin-bottom:10px}.transferPanel .transferLead{font-size:1.12rem;line-height:1.55;margin:0 0 22px;color:#4d4355}.catalogBtn{display:block;width:100%;box-sizing:border-box;background:var(--purple);color:#fff;text-align:center;text-decoration:none;border-radius:13px;padding:18px 24px;font-weight:900;margin:0 0 28px}.transferPrompt{margin:0 0 28px}.transferPrompt p{margin:0 0 10px;line-height:1.55}.transferPrompt ul{margin:8px 0 16px;padding-left:24px;line-height:1.65}
+.filterGroup{margin-top:18px}.filterGroup h2{font-size:1rem;margin:0 0 8px;color:var(--deep)}
+.filterRow{display:flex;flex-wrap:wrap;gap:8px}
+.filterBtn{border:2px solid #c7b6d2;background:#fff;color:var(--ink);border-radius:999px;padding:9px 12px;font-weight:800;cursor:pointer}
+.filterBtn.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+.searchCarry{border:2px dashed #c9bad2;border-radius:17px;padding:16px;background:#fbf9fc;margin-bottom:18px}
+.filterSummary{margin-top:14px;color:var(--muted);font-weight:700;line-height:1.4}
+.backBtn{border:0;background:transparent;color:var(--purple);font-weight:900;text-decoration:underline;cursor:pointer;margin-top:16px}
+.readAloudBtn{border:2px solid #c7b6d2;background:#fff;color:var(--deep);border-radius:999px;padding:7px 11px;font-weight:900;cursor:pointer;margin:0 0 12px}
+.readAloudBtn:hover{border-color:var(--purple)}
+.readAloudBtn[aria-pressed="true"]{background:var(--deep);color:#fff;border-color:var(--deep)}
+
+
+[hidden]{display:none !important}
+</style></head>
+<body>
+<header>LENOX LIBRARY · SEARCH SANDBOX · PART 2</header>
+<main>
+<section class="panel">
+<div class="orientationCue" aria-label="Sandbox rhythm">BUILD → WATCH → CHANGE → WATCH AGAIN</div>
+<button class="readAloudBtn" id="readAloudBtn" type="button" aria-pressed="false">🔊 Read aloud</button>
+
+<p class="eyebrow">Your side</p><h1 id="leftTitle">Build the search.</h1>
+<p class="help" id="leftHelp">Add words and operators in any order. Remove anything by clicking it again. Pay attention to how adding keywords and operators changes the search results.</p>
+<div class="workspace" id="searchWorkspace">
+<div class="label">Your search</div><div class="query" id="query"></div>
+</div>
+
+<div class="bank" id="searchControls">
+<h2>Social media words</h2><div class="row" id="socialBank"></div>
+<h2>Mental health words</h2><div class="row" id="mentalBank"></div>
+<h2>Connect the two ideas</h2>
+<div class="row">
+<button class="add" id="andBtn" onclick="setConnector('AND')">+ AND</button>
+<button class="add" id="orBtn" onclick="setConnector('OR')">+ OR</button>
+<button class="add" id="clearConnector" onclick="setConnector(null)">Remove connector</button>
+</div>
+<h2>Exact phrases</h2>
+<div id="phraseBank">
+<button class="add" data-phrase="phrase_social_media">+ Exact phrase: "social media"</button>
+<button class="add" data-phrase="phrase_mental_health">+ Exact phrase: "mental health"</button>
+<button class="add" data-phrase="body_image">+ Exact phrase: "body image"</button>
+<button class="add" data-phrase="screen_time">+ Exact phrase: "screen time"</button>
+</div>
+<button class="reset" onclick="resetAll()">Reset sandbox</button>
+<button class="continueBtn" onclick="goToFilters()">Continue: Play with filters →</button>
+</div>
+
+<div id="filterControls" hidden>
+  <div class="searchCarry">
+    <div class="label">Your search</div>
+    <div class="query" id="carriedQuery"></div>
+    <div class="filterSummary" id="originalResultCount" style="margin-top:12px"></div>
+  </div>
+  <p class="help"><strong>The search is fixed for this part.</strong> Pay attention to how filters change which results are showing.</p>
+  <div class="filterGroup"><h2>Peer reviewed</h2><div class="filterRow">
+    <button class="filterBtn" id="peerBtn" aria-pressed="false" onclick="togglePeer()">Peer reviewed only</button>
+  </div></div>
+  <div class="filterGroup"><h2>Publication date</h2><div class="filterRow">
+    <button class="filterBtn active" data-date="all" aria-pressed="true" onclick="setDateFilter('all')">All dates</button>
+    <button class="filterBtn" data-date="10" aria-pressed="false" onclick="setDateFilter('10')">Last 10 years</button>
+    <button class="filterBtn" data-date="5" aria-pressed="false" onclick="setDateFilter('5')">Last 5 years</button>
+  </div></div>
+  <div class="filterGroup"><h2>Source type</h2><div class="filterRow">
+    <button class="filterBtn active" data-source="all" aria-pressed="true" onclick="setSourceFilter('all')">All</button>
+    <button class="filterBtn" data-source="journal" aria-pressed="false" onclick="setSourceFilter('journal')">Academic journals</button>
+    <button class="filterBtn" data-source="news" aria-pressed="false" onclick="setSourceFilter('news')">News</button>
+  </div></div>
+  <div class="filterSummary" id="filterSummary">No filters applied yet.</div>
+  <button class="reset" onclick="resetFilters()">Reset filters</button>
+  <button class="continueBtn" onclick="backToSearch()">← Back to search building</button>
+  <button class="continueBtn" onclick="goToTransfer()">Continue: Try it for real →</button>
+</div>
+
+
+</section>
+
+<section class="panel">
+<p class="eyebrow">Result side</p><h1 id="rightTitle">Watch the pool react.</h1>
+<div class="results" id="results" aria-hidden="true"></div>
+<div class="count" id="count" role="status" aria-live="polite" aria-atomic="true"></div>
+<div class="legend" id="resultLegend" hidden>
+  <span>✓ PR = peer reviewed</span>
+  <span>NEW = last 5 years</span>
+  <span>REC = 6–10 years ago</span>
+  <span>OLD = more than 10 years ago</span>
+</div>
+<p class="caption">Illustrative result pool — not real database results.</p>
+<div class="note" id="note"></div>
+</section>
+</main>
+<div id="transferStage" hidden>
+  <section class="panel transferPanel">
+    <p class="eyebrow">Part 3</p>
+    <h1>Try it for real.</h1>
+    <p class="transferLead">You’ve practiced changing a search. Now try it in the real library search.</p>
+    <a class="catalogBtn" href="https://www.uww.edu/library" target="_blank" rel="noopener">Open Research@UWW →</a>
+    <div class="transferPrompt">
+      <p><strong>Try one search.</strong></p>
+      <p>Search for something you’re curious about.</p>
+      <p><strong>Then, if you want, change it once.</strong></p>
+      <p>You could:</p>
+      <ul><li>add another keyword</li><li>try AND or OR</li><li>put a phrase in quotation marks</li><li>try a filter</li></ul>
+      <p><strong>That’s it.</strong> You don’t need to find the perfect source. Just notice what happens when you change your search.</p>
+    </div>
+    <button class="continueBtn" type="button" onclick="backToFilters()">← Back to filters</button>
+  </section>
+</div>
+
+<script>
+const socialWords=['social media','Instagram','TikTok'];
+const mentalWords=['mental health','anxiety','well-being'];
+const termFields={
+ 'social media':'social_media',
+ 'Instagram':'instagram',
+ 'TikTok':'tiktok',
+ 'mental health':'mental_health',
+ 'anxiety':'anxiety',
+ 'well-being':'well_being'
+};
+let tokens=[{type:'term',value:'social media'}];
+
+/* Fixed hypothetical database. Every search is calculated from these same records. */
+const pool=[{"id":1,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":2,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":3,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":4,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":5,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":6,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":7,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":8,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":9,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":true,"icon":"🧠"},{"id":10,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":true,"icon":"🧠"},{"id":11,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":true,"icon":"🧠"},{"id":12,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":13,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":14,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":15,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":16,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":17,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":18,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":19,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":true,"icon":"🧠"},{"id":20,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"🧠"},{"id":21,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"🧠"},{"id":22,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"🧠"},{"id":23,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"🧠"},{"id":24,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"🧠"},{"id":25,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":26,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":27,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":28,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":29,"social_media":false,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"🧠"},{"id":30,"social_media":false,"instagram":true,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":true,"screen_time":true,"icon":"📱"},{"id":31,"social_media":false,"instagram":true,"tiktok":true,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":32,"social_media":false,"instagram":true,"tiktok":true,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":true,"screen_time":true,"icon":"📱🧠"},{"id":33,"social_media":false,"instagram":true,"tiktok":true,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"📱🧠"},{"id":34,"social_media":false,"instagram":true,"tiktok":true,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":35,"social_media":false,"instagram":true,"tiktok":true,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"📱🧠"},{"id":36,"social_media":true,"instagram":false,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":37,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":38,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":39,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"📱🧠"},{"id":40,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":true,"icon":"📱🧠"},{"id":41,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":true,"screen_time":false,"icon":"📱🧠"},{"id":42,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":true,"body_image":true,"screen_time":false,"icon":"📱🧠"},{"id":43,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":true,"screen_time":false,"icon":"📱🧠"},{"id":44,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":false,"phrase_social_media":false,"phrase_mental_health":true,"body_image":false,"screen_time":true,"icon":"📱🧠"},{"id":45,"social_media":true,"instagram":false,"tiktok":false,"mental_health":true,"anxiety":true,"well_being":true,"phrase_social_media":true,"phrase_mental_health":true,"body_image":true,"screen_time":true,"icon":"📱🧠"},{"id":46,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":47,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":48,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":49,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":50,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":51,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":52,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":53,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":54,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":55,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":56,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":57,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":58,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"📱"},{"id":59,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"📱"},{"id":60,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":true,"well_being":true,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":61,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":true,"well_being":true,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"📱🧠"},{"id":62,"social_media":true,"instagram":false,"tiktok":true,"mental_health":false,"anxiety":true,"well_being":true,"phrase_social_media":true,"phrase_mental_health":false,"body_image":true,"screen_time":false,"icon":"📱🧠"},{"id":63,"social_media":true,"instagram":false,"tiktok":true,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":64,"social_media":true,"instagram":false,"tiktok":true,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":65,"social_media":true,"instagram":false,"tiktok":true,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":66,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":67,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":68,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":69,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":false,"phrase_mental_health":false,"body_image":true,"screen_time":false,"icon":"📱"},{"id":70,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":71,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":72,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":73,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":74,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":75,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":76,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":77,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":78,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":79,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":80,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":81,"social_media":true,"instagram":true,"tiktok":false,"mental_health":false,"anxiety":true,"well_being":true,"phrase_social_media":false,"phrase_mental_health":false,"body_image":true,"screen_time":true,"icon":"📱🧠"},{"id":82,"social_media":true,"instagram":true,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":83,"social_media":true,"instagram":true,"tiktok":false,"mental_health":true,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":true,"body_image":false,"screen_time":false,"icon":"📱🧠"},{"id":84,"social_media":true,"instagram":true,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":false,"icon":"📱"},{"id":85,"social_media":true,"instagram":true,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"📱"},{"id":86,"social_media":true,"instagram":true,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":false,"screen_time":true,"icon":"📱"},{"id":87,"social_media":true,"instagram":true,"tiktok":true,"mental_health":false,"anxiety":false,"well_being":false,"phrase_social_media":true,"phrase_mental_health":false,"body_image":true,"screen_time":true,"icon":"📱"}];
+
+
+/* Stage 2 adds filter metadata to the SAME 87 hypothetical records.
+   Search membership is unchanged; filters act only on retrieved records. */
+const sourceCycle=['journal','journal','news','journal','news','journal'];
+pool.forEach((record,index)=>{
+  record.year=2012+((index*7)%15);
+  record.sourceType=sourceCycle[index%sourceCycle.length];
+  record.peerReviewed=record.sourceType==='journal' && (index%4!==1);
+});
+let stage=1, peerOnly=false, dateFilter='all', sourceFilter='all';
+
+function recordPassesFilters(x){
+  if(peerOnly && !x.peerReviewed)return false;
+  if(dateFilter==='10' && x.year<2017)return false;
+  if(dateFilter==='5' && x.year<2022)return false;
+  if(sourceFilter!=='all' && x.sourceType!==sourceFilter)return false;
+  return true;
+}
+function queryText(){
+  const p={phrase_social_media:'social media',phrase_mental_health:'mental health',body_image:'body image',screen_time:'screen time'};
+  return tokens.map(t=>t.type==='phrase'?'"'+p[t.value]+'"':t.value).join(' ');
+}
+function goToFilters(){
+ tokens=[{type:'term',value:'social media'},{type:'op',value:'AND'},{type:'term',value:'mental health'}];
+ stage=2;
+ searchWorkspace.hidden=true;
+ searchControls.hidden=true;
+ filterControls.hidden=false;
+ leftTitle.textContent='Which results do you need?';
+ leftHelp.textContent='The search is fixed for this part. Now watch what changes when you apply filters.';
+ rightTitle.textContent='Watch the filtered pool.';
+ resetFilters();
+ render();
+}
+function goToTransfer(){
+  stopReadAloud();
+  document.querySelector('main').hidden=true;
+  document.getElementById('transferStage').hidden=false;
+}
+function backToFilters(){
+  document.getElementById('transferStage').hidden=true;
+  document.querySelector('main').hidden=false;
+}
+function backToSearch(){
+ stage=1;
+ filterControls.hidden=true;
+ searchWorkspace.hidden=false;
+ searchControls.hidden=false;
+ leftTitle.textContent='Build your search.';
+ leftHelp.textContent='Add words and operators in any order. Remove anything by clicking it again. Pay attention to how adding keywords and operators changes the search results.';
+ rightTitle.textContent='Watch the pool react.';
+ resetFilters();
+ render();
+}
+function togglePeer(){peerOnly=!peerOnly;render()}
+function setDateFilter(v){dateFilter=v;render()}
+function setSourceFilter(v){sourceFilter=v;render()}
+function resetFilters(){peerOnly=false;dateFilter='all';sourceFilter='all';render()}
+const filterLessons=[
+ {
+   html:'<strong>Peer reviewed</strong><br>Peer-reviewed articles are evaluated by other experts in the field before they are published. Researchers often use them when they need scholarly evidence.<br><br><strong>Try it:</strong><br><strong>1.</strong> Look at the results and notice which ones have the <strong>PR</strong> mark.<br><strong>2.</strong> Click <strong>Peer reviewed only</strong>.<br><strong>3.</strong> Watch what happens. Which results remain?<br><br><strong>Why might this be useful?</strong><br>If you need scholarly research, this filter can help you focus on peer-reviewed sources.'
+ },
+ {
+   html:'<strong>Publication date</strong><br>Sometimes <strong>when</strong> something was published matters. If you are researching a recent change or development, you may want newer research. Older research can still be useful for background or historical comparison.<br><br><strong>Try it:</strong><br><strong>1.</strong> Look for <strong>NEW, REC, and OLD</strong> on the results.<br><strong>2.</strong> Click <strong>Last 5 years</strong>.<br><strong>3.</strong> Watch what happens. Which results disappear?<br><br><strong>Why might this be useful?</strong><br>A date filter can help when your research question depends on recent information.'
+ },
+ {
+   html:'<strong>Source type</strong><br>Different sources do different jobs. <strong>Academic journals</strong> are useful for research studies and scholarly analysis. <strong>News</strong> is useful for current events and reporting on things happening now.<br><br><strong>Try it:</strong><br><strong>1.</strong> Click <strong>Academic journals</strong> and watch the results.<br><strong>2.</strong> Click <strong>News</strong> and watch again.<br><strong>3.</strong> What changed?'
+ },
+ {
+   html:'<strong>Now choose for yourself.</strong><br><br><strong>You are researching how social media use has changed recently.</strong><br>Which filter would you try? Make a choice below and watch what happens.'
+ },
+ {
+   html:'<strong>Now choose for yourself.</strong><br><br><strong>You want current coverage of a new TikTok policy or controversy.</strong><br>Which source type would you try? Make a choice below and watch what happens.'
+ },
+ {
+   html:'<strong>Now choose for yourself.</strong><br><br><strong>You need research evidence about social media and anxiety.</strong><br>Which source type would you try? Make a choice below and watch what happens.'
+ },
+ {
+   html:'<strong>FINAL REFLECTION</strong><br>What did you learn about what filters do?<br>How could choosing a filter based on what you need help you during research?'
+ }
+];
+let filterLessonIndex=0;
+function showFilterLesson(){
+  filterReflectionText.innerHTML=filterLessons[filterLessonIndex].html;
+  prevFilterLessonBtn.disabled=filterLessonIndex===0;
+  nextFilterLessonBtn.style.display=filterLessonIndex===filterLessons.length-1?'none':'inline-block';
+}
+function nextFilterLesson(){
+  if(filterLessonIndex<filterLessons.length-1)filterLessonIndex++;
+  resetFilters();
+  showFilterLesson();
+}
+function previousFilterLesson(){
+  if(filterLessonIndex>0)filterLessonIndex--;
+  resetFilters();
+  showFilterLesson();
+}
+
+function addTerm(v){
+ const i=tokens.findIndex(t=>t.type==='term'&&t.value===v);
+ if(i>=0) tokens.splice(i,1); else tokens.push({type:'term',value:v});
+ render();
+}
+function addOperator(v){tokens.push({type:'op',value:v});render()}
+function togglePhrase(value){
+ const i=tokens.findIndex(t=>t.type==='phrase'&&t.value===value);
+ if(i>=0)tokens.splice(i,1);else tokens.push({type:'phrase',value:value});
+ render();
+}
+function removeToken(i){tokens.splice(i,1);render()}
+function resetAll(){tokens=[{type:'term',value:'social media'}];render()}
+
+function tokenMatch(x,t){return !!x[t.type==='phrase'?t.value:termFields[t.value]]}
+
+/* Read only the complete Boolean expression at the start of the token stream.
+   A dangling operator or an unconnected later keyword is visible in the builder
+   but does not execute yet. */
+function completeExpression(){
+ /* Find the first searchable component, then consume only explicit
+    operator + searchable-component pairs. Nothing is inferred. */
+ let start=tokens.findIndex(t=>t.type!=='op');
+ if(start<0)return {operands:[],operators:[],usedThrough:-1};
+ const operands=[tokens[start]], operators=[];
+ let i=start+1, usedThrough=start;
+ while(i+1<tokens.length){
+   if(tokens[i].type==='op' && tokens[i+1].type!=='op'){
+     operators.push(tokens[i].value);
+     operands.push(tokens[i+1]);
+     usedThrough=i+1;
+     i+=2;
+   } else break;
+ }
+ return {operands,operators,usedThrough};
+}
+
+/* Standard Boolean set logic: AND before OR. */
+function matches(x){
+ const e=completeExpression();
+ if(!e.operands.length)return false;
+
+ /* If the student has added searchable components but has not connected
+    them with Boolean operators, show the union of those independent sets.
+    This is the sandbox's "records currently in play" view — NOT implicit AND
+    and NOT implicit OR in the displayed query. */
+ const searchable=tokens.filter(t=>t.type!=='op');
+ const hasAnyOperator=tokens.some(t=>t.type==='op');
+ if(!hasAnyOperator){
+   return searchable.some(t=>tokenMatch(x,t));
+ }
+
+ /* Once an explicit Boolean expression exists, evaluate only the complete
+    expression. Dangling operators do not change the results. */
+ let segment=tokenMatch(x,e.operands[0]);
+ let answer=false;
+ for(let i=0;i<e.operators.length;i++){
+   const rhs=tokenMatch(x,e.operands[i+1]);
+   if(e.operators[i]==='AND'){
+     segment=segment && rhs;
+   }else{
+     answer=answer || segment;
+     segment=rhs;
+   }
+ }
+ return answer || segment;
+}
+function render(){
+ const active=new Set(tokens.filter(t=>t.type==='term').map(t=>t.value));
+ socialBank.innerHTML='';socialWords.forEach(w=>makeWord(socialBank,w,active));
+ mentalBank.innerHTML='';mentalWords.forEach(w=>makeWord(mentalBank,w,active));
+ document.querySelectorAll('#phraseBank [data-phrase]').forEach(b=>{
+   const active=tokens.some(t=>t.type==='phrase'&&t.value===b.dataset.phrase);
+   const labels={
+     phrase_social_media:'social media',
+     phrase_mental_health:'mental health',
+     body_image:'body image',
+     screen_time:'screen time'
+   };
+   b.classList.toggle('on',active);
+   b.setAttribute('aria-pressed', String(active));
+   b.textContent=(active?'− ':'+ ')+'Exact phrase: "'+labels[b.dataset.phrase]+'"';
+   b.onclick=()=>togglePhrase(b.dataset.phrase);
+ });
+
+ query.innerHTML='';
+ if(!tokens.length)query.innerHTML='<span style="color:#6b6071">Add a keyword or operator.</span>';
+ tokens.forEach((t,i)=>{
+   const s=document.createElement('span');s.className='qchip';
+   const phraseLabels={phrase_social_media:'social media',phrase_mental_health:'mental health',body_image:'body image',screen_time:'screen time'};
+   const shown=t.type==='phrase'?'"'+phraseLabels[t.value]+'"':t.value;
+   s.innerHTML=shown+`<button aria-label="Remove ${shown}" onclick="removeToken(${i})">×</button>`;
+   if(t.type==='op')s.classList.add('op');
+   query.appendChild(s);
+ });
+
+ const searchVis=pool.filter(matches);
+ const vis=stage===2?searchVis.filter(recordPassesFilters):searchVis;
+ resultLegend.hidden=stage!==2;
+ if(stage===2){
+   carriedQuery.textContent=queryText()||'No search built';
+   originalResultCount.innerHTML='<strong>These keywords found '+searchVis.length+' results before filters.</strong>';
+   peerBtn.classList.toggle('active',peerOnly);
+   peerBtn.setAttribute('aria-pressed', String(peerOnly));
+   document.querySelectorAll('[data-date]').forEach(b=>{const on=b.dataset.date===dateFilter;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+   document.querySelectorAll('[data-source]').forEach(b=>{const on=b.dataset.source===sourceFilter;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
+   const parts=[];
+   if(peerOnly)parts.push('peer reviewed');
+   if(dateFilter==='10')parts.push('last 10 years');
+   if(dateFilter==='5')parts.push('last 5 years');
+   if(sourceFilter==='journal')parts.push('academic journals');
+   if(sourceFilter==='news')parts.push('news');
+   filterSummary.textContent=parts.length?'Filters applied: '+parts.join(' · '):'No filters applied yet.';
+ }
+ results.innerHTML='';
+ vis.forEach((x,i)=>{
+   const d=document.createElement('div');d.className='item';
+   const icon=document.createElement('span');icon.textContent=x.icon;d.appendChild(icon);
+   if(stage===2){
+     if(x.peerReviewed){
+       const p=document.createElement('span');p.className='metaBadge peerBadge';p.textContent='✓ PR';
+       p.setAttribute('aria-label','Peer reviewed');d.appendChild(p);
+     }
+     const age=document.createElement('span');age.className='metaBadge dateBadge';
+     if(x.year>=2022){age.textContent='NEW';age.setAttribute('aria-label','Published in the last 5 years');}
+     else if(x.year>=2017){age.textContent='REC';age.setAttribute('aria-label','Published 6 to 10 years ago');}
+     else{age.textContent='OLD';age.setAttribute('aria-label','Published more than 10 years ago');}
+     d.appendChild(age);
+     d.title=(x.peerReviewed?'Peer reviewed · ':'Not peer reviewed · ')+x.year;
+   }
+   d.style.animationDelay=Math.min(i,20)*6+'ms';results.appendChild(d)
+ });
+ count.textContent=stage===2?vis.length+' of '+searchVis.length+' search results showing':vis.length+' possible results';
+
+ const e=completeExpression();
+ const incomplete=e.usedThrough>=0 && e.usedThrough<tokens.length-1;
+ if(stage===2){
+   const activeFilters=[];
+   if(peerOnly)activeFilters.push('<strong>Peer reviewed only</strong>');
+   if(dateFilter==='10')activeFilters.push('<strong>Last 10 years</strong>');
+   if(dateFilter==='5')activeFilters.push('<strong>Last 5 years</strong>');
+   if(sourceFilter==='journal')activeFilters.push('<strong>Academic journals</strong>');
+   if(sourceFilter==='news')activeFilters.push('<strong>News</strong>');
+
+   if(!activeFilters.length){
+     note.innerHTML='<strong>Your keywords have not changed.</strong> They found '+searchVis.length+' results. No filters are applied, so all '+searchVis.length+' are showing.';
+   }else{
+     const filterWords=activeFilters.length===1
+       ? activeFilters[0]
+       : activeFilters.slice(0,-1).join(', ')+' + '+activeFilters[activeFilters.length-1];
+     note.innerHTML='<strong>Your keywords have not changed.</strong> They found '+searchVis.length+' results. With '+filterWords+', <strong>'+vis.length+' of those '+searchVis.length+' results are showing.</strong>';
+   }
+ }
+ else if(incomplete) note.innerHTML='That new piece is visible, but the Boolean expression is still incomplete there. <strong>A dangling operator does not change the results.</strong>';
+ else if(e.operators.length) note.innerHTML='<strong>The result pool is calculated from the same fixed set of records using Boolean set logic.</strong>';
+ else if(tokens.filter(t=>t.type!=='op').length>1) note.innerHTML='These keyword sets are all <strong>in play</strong>, but you have not connected them yet. Try AND or OR and watch what changes.';
+ else note.innerHTML='Add another search term, or connect ideas with AND or OR.';
+}
+function makeWord(el,w,active){
+ const b=document.createElement('button');b.className='add';const isActive=active.has(w);b.setAttribute('aria-pressed',String(isActive));b.textContent=(isActive?'− ':'+ ')+w;b.onclick=()=>addTerm(w);el.appendChild(b);
+}
+
+const speechSupported=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
+let sandboxUtterance=null;
+let speechQueue=[];
+let speechQueueIndex=0;
+let speechSession=0;
+let availableVoices=[];
+
+function refreshVoices(){
+  if(!speechSupported) return;
+  availableVoices=window.speechSynthesis.getVoices()||[];
+}
+
+function preferredEnglishVoice(){
+  const english=availableVoices.filter(v=>/^en(?:-|_)/i.test(v.lang||''));
+  if(!english.length) return null;
+
+  const enUS=english.filter(v=>/^en[-_]US$/i.test(v.lang||''));
+  const qualityWords=/premium|enhanced|natural|neural|high quality|high-quality/i;
+  const recognizedFemaleUS=/samantha|zira|ava|allison|victoria|aria|jenny/i;
+
+  const qualityScore=v=>(qualityWords.test(v.name)?8:0)+(v.localService?4:0)+(v.default?1:0);
+  const bestByQuality=voices=>voices.slice().sort((a,b)=>qualityScore(b)-qualityScore(a))[0]||null;
+
+  const recognized=enUS.filter(v=>recognizedFemaleUS.test(v.name||''));
+  const preferredNaturalFemale=recognized.filter(v=>qualityWords.test(v.name||''));
+  return bestByQuality(preferredNaturalFemale)
+      || bestByQuality(recognized)
+      || bestByQuality(enUS)
+      || bestByQuality(english)
+      || null;
+}
+
+function readAloudChunks(){
+  const parts=[];
+  parts.push('Search Sandbox.');
+  parts.push(stage===1?'Part 1. Build the search.':'Part 2. Which results do you need?');
+  parts.push(document.getElementById('leftHelp').textContent.trim());
+
+  return parts.filter(Boolean);
+}
+
+function finishReadAloud(session){
+  if(session!==speechSession) return;
+  sandboxUtterance=null;
+  speechQueue=[];
+  speechQueueIndex=0;
+  readAloudBtn.setAttribute('aria-pressed','false');
+  readAloudBtn.textContent='🔊 Read aloud';
+}
+
+function stopReadAloud(){
+  speechSession++;
+  if(speechSupported) window.speechSynthesis.cancel();
+  sandboxUtterance=null;
+  speechQueue=[];
+  speechQueueIndex=0;
+  readAloudBtn.setAttribute('aria-pressed','false');
+  readAloudBtn.textContent='🔊 Read aloud';
+}
+
+function speakNextChunk(session,voice){
+  if(session!==speechSession) return;
+  if(speechQueueIndex>=speechQueue.length){
+    finishReadAloud(session);
+    return;
+  }
+  const chunk=speechQueue[speechQueueIndex++];
+  sandboxUtterance=new SpeechSynthesisUtterance(chunk);
+  if(voice) sandboxUtterance.voice=voice;
+  sandboxUtterance.rate=0.9;
+  sandboxUtterance.pitch=1;
+  sandboxUtterance.onend=()=>{
+    if(session!==speechSession) return;
+    const pauseMs=/\.\s*$/.test(chunk)?500:0;
+    if(pauseMs){
+      window.setTimeout(()=>{
+        if(session===speechSession) speakNextChunk(session,voice);
+      },pauseMs);
+    }else{
+      speakNextChunk(session,voice);
+    }
+  };
+  sandboxUtterance.onerror=()=>finishReadAloud(session);
+  window.speechSynthesis.speak(sandboxUtterance);
+}
+
+function toggleReadAloud(){
+  if(!speechSupported) return;
+  if(readAloudBtn.getAttribute('aria-pressed')==='true'){
+    stopReadAloud();
+    return;
+  }
+  window.speechSynthesis.cancel();
+  refreshVoices();
+  speechQueue=readAloudChunks();
+  speechQueueIndex=0;
+  const voice=preferredEnglishVoice();
+  const session=++speechSession;
+  readAloudBtn.setAttribute('aria-pressed','true');
+  readAloudBtn.textContent='■ Stop reading';
+  speakNextChunk(session,voice);
+}
+
+readAloudBtn.onclick=toggleReadAloud;
+if(speechSupported){
+  refreshVoices();
+  if('onvoiceschanged' in window.speechSynthesis){
+    window.speechSynthesis.addEventListener('voiceschanged',refreshVoices);
+  }
+}else{
+  readAloudBtn.disabled=true;
+  readAloudBtn.textContent='Read aloud unavailable';
+  readAloudBtn.setAttribute('aria-label','Read aloud is not available in this browser');
+}
+
+andBtn.onclick=()=>addOperator('AND');
+orBtn.onclick=()=>addOperator('OR');
+clearConnector.style.display='none';
+render();
+</script>
+</body></html>
